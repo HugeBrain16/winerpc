@@ -1,6 +1,6 @@
 # WineRPC
 
-A Discord rich pressence support for [Wine](https://winehq.org)
+A Discord rich presence support for [Wine](https://winehq.org)
 
 ## How to Run
 
