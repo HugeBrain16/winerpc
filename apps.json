@@ -1,0 +1,14 @@
+[
+    {"title": "Osu!", "exe": ["osu!.exe"], "icon": "osu"},
+    {"title": "S.T.A.L.K.E.R Anomaly",
+        "exe": [
+            "AnomalyDX8",
+            "AnomalyDX9",
+            "AnomalyDX10",
+            "AnomalyDX11",
+            "AnomalyLauncher"
+        ]
+    },
+    {"title": "HoloCure", "exe": ["holocure.exe"]}
+]
+

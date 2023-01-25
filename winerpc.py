@@ -1,0 +1,174 @@
+#!/usr/bin/python3
+import asyncio
+import json
+import time
+from dataclasses import dataclass
+from enum import Enum
+from typing import List, Optional, Union
+
+import psutil
+from pypresence import AioPresence
+
+__version__ = "1.0.0-rc0"
+
+# needs these wine processes,
+# to check if wineserver is running
+WINEPROCS = [
+    "start.exe",
+    "wineserver",
+    "explorer.exe",
+]
+
+
+def log(cat: str, msg: str):
+    print(f"[{cat}]: {msg}")
+
+
+@dataclass
+class App:
+    exe: Union[str, List[str]]
+    title: str
+    icon: Optional[str] = None
+
+
+class StateMode(Enum):
+    INACTIVE = 0
+    SCANNING = 1  # Scan for running wine program listed in appdb
+    RUNNING = 2
+
+
+@dataclass
+class State:
+    process: Optional[App] = None
+    mode: StateMode = StateMode.INACTIVE
+
+
+class AppDB:
+    def __init__(self, fname: str):
+        with open(fname, "r") as file:
+            self._apps = json.load(file)
+        self.apps: List[App] = []
+
+        for app in self._apps:
+            self.apps.append(
+                App([exe.lower() for exe in app["exe"]], app["title"], app.get("icon"))
+            )
+        log("INFO", f"Loaded {len(self.apps)} apps from database.")
+
+    @staticmethod
+    def _get(exe: str, apps: List[App]):
+        for app in apps:
+            if exe in [e.lower() for e in app.exe]:
+                return app
+
+    def get(self, exe: str):
+        return self._get(exe, self.apps)
+
+
+class WineRPC:
+    def __init__(self, config):
+        self.rpc = AioPresence(config["app_id"])
+        self.loop = asyncio.new_event_loop()
+        self.rpc.loop = self.loop
+        self.config = config
+
+        self.state = State()
+        self.apps = AppDB(self.config["app_list_path"])
+
+    async def _event(self):
+        while True:
+            await asyncio.sleep(15)
+
+    async def _scan(self):
+        apps: List[App] = []
+
+        for proc in psutil.process_iter():
+            name = proc.name().lower()
+            app = self.apps.get(name)
+
+            if app and not self.apps._get(name, apps):
+                apps.append(app)
+
+        if apps:
+            if self.state.mode is not StateMode.RUNNING:
+                self.state.process = apps[0]
+                self.state.mode = StateMode.RUNNING
+                log("INFO", "New process is running: " + apps[0].title)
+
+                await self.rpc.update(
+                    details=f"Playing {apps[0].title}",
+                    start=time.time(),  # type: ignore
+                    small_image="wine",
+                    large_image=apps[0].icon,  # type: ignore
+                )
+            else:
+                if not self.apps._get(self.state.process.exe[0], apps):  # type: ignore
+                    self.state.process = apps[0]
+                    log("INFO", "Process updated to: " + apps[0].title)
+
+                    await self.rpc.clear()
+                    await self.rpc.update(
+                        details=f"Playing {apps[0].title}",
+                        start=time.time(),  # type: ignore
+                        small_image="wine",
+                        large_image=apps[0].icon,  # type: ignore
+                    )
+        else:
+            if self.state.mode is StateMode.RUNNING:
+                log("INFO", "Process stopped: " + self.state.process.title)  # type: ignore
+                self.state.process = None
+                self.state.mode = StateMode.SCANNING
+
+                await self.rpc.clear()
+
+    async def _watcher(self):
+        while True:
+            procs = []
+            for proc in psutil.process_iter():
+                name = proc.name()
+
+                if name in WINEPROCS and name not in procs:
+                    procs.append(name)
+
+            if len(procs) < len(WINEPROCS):
+                if self.state.mode is StateMode.RUNNING:
+                    await self.rpc.clear()
+
+                if self.state.mode is not StateMode.INACTIVE:
+                    self.state.process = None
+                    self.state.mode = StateMode.INACTIVE
+                    log("INFO", "Watcher is in INACTIVE state.")
+            else:
+                if self.state.mode not in [StateMode.SCANNING, StateMode.RUNNING]:
+                    self.state.mode = StateMode.SCANNING
+                    log(
+                        "INFO",
+                        "Watcher is in SCANNING state, scanning for running apps...",
+                    )
+
+                await self._scan()
+
+            await asyncio.sleep(1)
+
+    async def _start(self):
+        log("INFO", "Connecting to Discord RPC Socket...")
+        try:
+            await self.rpc.connect()
+        except ConnectionRefusedError:
+            log(
+                "ERROR",
+                "Couldn't connect to Discord RPC Socket.",
+            )
+            exit(1)
+        log("INFO", "Starting watcher task...")
+        self.loop.create_task(self._watcher())
+        await self._event()
+
+    def start(self):
+        self.loop.run_until_complete(self._start())
+
+
+if __name__ == "__main__":
+    config = json.load(open("config.json", "r"))
+    winerpc = WineRPC(config)
+    winerpc.start()
