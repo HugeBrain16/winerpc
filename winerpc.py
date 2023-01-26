@@ -13,7 +13,7 @@ import binary2strings as b2s
 import psutil
 from pypresence import AioPresence
 
-__version__ = "1.0.0-rc2"
+__version__ = "1.0.0-rc3"
 
 # needs these wine processes,
 # to check if wineserver is running
@@ -109,15 +109,26 @@ class WineRPC:
         while True:
             await asyncio.sleep(15)
 
+    def get_process_basename(self, process: psutil.Process) -> str:
+        proc = os.path.basename(process.exe().replace("\\", os.sep))
+
+        if proc in ("wine-preloader", "wine64-preloader") and process.cmdline():
+            proc = os.path.basename(process.cmdline()[0].replace("\\", os.sep))
+
+        return proc
+
     async def _scan(self):
         apps: List[App] = []
 
         for proc in psutil.process_iter():
-            name = proc.name().lower()
-            app = self.apps.get(name)
+            try:
+                exe = self.get_process_basename(proc).lower()
+                app = self.apps.get(exe)
 
-            if app and not self.apps._get(name, apps):
-                apps.append(app)
+                if app and not self.apps._get(exe, apps):
+                    apps.append(app)
+            except psutil.AccessDenied:
+                continue
 
         if apps:
             if self.state.mode is not StateMode.RUNNING:
@@ -143,13 +154,19 @@ class WineRPC:
         while True:
             procs = []
             for proc in psutil.process_iter():
-                name = proc.name()
+                try:
+                    exe = self.get_process_basename(proc)
 
-                if name in WINEPROCS and name not in procs:
-                    if name == "wineserver" and not self.state.server:
-                        self.state.server = proc.exe()
-                        log("INFO", f"Wine Server: {self.state.get_server_version()}")
-                    procs.append(name)
+                    if exe in WINEPROCS and exe not in procs:
+                        if exe == "wineserver" and not self.state.server:
+                            self.state.server = proc.exe()
+                            log(
+                                "INFO",
+                                f"Wine Server: {self.state.get_server_version()}",
+                            )
+                        procs.append(exe)
+                except psutil.AccessDenied:
+                    continue
 
             if len(procs) < len(WINEPROCS):
                 if self.state.mode is StateMode.RUNNING:
