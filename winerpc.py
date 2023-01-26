@@ -92,7 +92,7 @@ class WineRPC:
         self.state = State()
         self.apps = AppDB(self.config["app_list_path"])
 
-    async def _update(self, app: App):
+    async def _update(self, app: App, state: Optional[str] = None):
         self.state.process = app
 
         await self.rpc.update(
@@ -100,7 +100,7 @@ class WineRPC:
             start=time.time(),
             small_image="https://static.wikia.nocookie.net/logopedia/images/8/87/Wine_2008.png",
             small_text=self.state.get_server_version(),
-            state=self.state.get_server_version(),
+            state=state,
             large_image=app.icon,
             large_text=app.title,
         )
