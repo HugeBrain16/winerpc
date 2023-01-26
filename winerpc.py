@@ -1,5 +1,8 @@
 #!/usr/bin/python3
 import asyncio
+import importlib
+import importlib.util
+import inspect
 import json
 import os
 import re
@@ -33,6 +36,7 @@ class App:
     exe: str | List[str]
     title: str
     icon: Optional[str] = None
+    pid: Optional[int] = None
 
 
 class StateMode(Enum):
@@ -88,9 +92,23 @@ class WineRPC:
         self.loop = asyncio.new_event_loop()
         self.rpc.loop = self.loop
         self.config = config
+        self.lock = asyncio.Lock()
 
         self.state = State()
         self.apps = AppDB(self.config["app_list_path"])
+
+    @staticmethod
+    def load_plugin(name: str):
+        if os.path.isfile(os.path.join("plugins", f"{name}.py")):
+            spec = importlib.util.spec_from_file_location(
+                name, os.path.join("plugins", f"{name}.py")
+            )
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+
+            if hasattr(mod, "_plugin_entry"):
+                if inspect.iscoroutinefunction(getattr(mod, "_plugin_entry")):
+                    return mod
 
     async def _update(self, app: App, state: Optional[str] = None):
         self.state.process = app
@@ -132,6 +150,7 @@ class WineRPC:
                 app = self.apps.get(exe)
 
                 if app and not self.apps._get(exe, apps):
+                    app.pid = proc.pid
                     apps.append(app)
             except psutil.AccessDenied:
                 continue
@@ -141,20 +160,23 @@ class WineRPC:
                 self.state.mode = StateMode.RUNNING
                 log("INFO", "New process is running: " + apps[0].title)
 
-                await self._update(apps[0])
+                async with self.lock:
+                    await self._update(apps[0])
             else:
                 if self.state.process is not apps[0]:
                     log("INFO", "Process updated to: " + apps[0].title)
 
-                    await self.rpc.clear()
-                    await self._update(apps[0])
+                    async with self.lock:
+                        await self.rpc.clear()
+                        await self._update(apps[0])
         else:
             if self.state.mode is StateMode.RUNNING:
                 log("INFO", "Process stopped: " + self.state.process.title)
                 self.state.process = None
                 self.state.mode = StateMode.SCANNING
 
-                await self.rpc.clear()
+                async with self.lock:
+                    await self.rpc.clear()
 
     async def _watcher(self):
         while True:
@@ -172,7 +194,8 @@ class WineRPC:
 
             if len(procs) < len(WINEPROCS):
                 if self.state.mode is StateMode.RUNNING:
-                    await self.rpc.clear()
+                    async with self.lock:
+                        await self.rpc.clear()
 
                 if self.state.mode is not StateMode.INACTIVE:
                     self.state.process = None
@@ -203,6 +226,12 @@ class WineRPC:
             sys.exit(1)
         log("INFO", "Starting watcher task...")
         self.loop.create_task(self._watcher())
+        for plugin in self.config["plugins"]:
+            plug = self.load_plugin(plugin)
+
+            if plug:
+                log("INFO", "Loading plugin: " + plugin)
+                self.loop.create_task(plug._plugin_entry(self))
         await self._event()
 
     def start(self):
