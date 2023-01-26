@@ -1,11 +1,13 @@
 #!/usr/bin/python3
 import asyncio
 import json
+import os
 import re
+import sys
 import time
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Optional, Union
+from typing import List, Optional
 
 import binary2strings as b2s
 import psutil
@@ -28,7 +30,7 @@ def log(cat: str, msg: str):
 
 @dataclass
 class App:
-    exe: Union[str, List[str]]
+    exe: str | List[str]
     title: str
     icon: Optional[str] = None
 
@@ -59,7 +61,7 @@ class State:
 
 
 class AppDB:
-    def __init__(self, fname: str):
+    def __init__(self, fname: str | os.PathLike):
         with open(fname, "r") as file:
             self._apps = json.load(file)
         self.apps: List[App] = []
@@ -71,17 +73,17 @@ class AppDB:
         log("INFO", f"Loaded {len(self.apps)} apps from database.")
 
     @staticmethod
-    def _get(exe: str, apps: List[App]):
+    def _get(exe: str, apps: List[App]) -> Optional[App]:
         for app in apps:
             if exe in [e.lower() for e in app.exe]:
                 return app
 
-    def get(self, exe: str):
+    def get(self, exe: str) -> Optional[App]:
         return self._get(exe, self.apps)
 
 
 class WineRPC:
-    def __init__(self, config):
+    def __init__(self, config: dict):
         self.rpc = AioPresence(config["app_id"])
         self.loop = asyncio.new_event_loop()
         self.rpc.loop = self.loop
@@ -89,6 +91,19 @@ class WineRPC:
 
         self.state = State()
         self.apps = AppDB(self.config["app_list_path"])
+
+    async def _update(self, app: App):
+        self.state.process = app
+
+        await self.rpc.update(
+            details=f"Playing {app.title}",
+            start=time.time(),
+            small_image="https://static.wikia.nocookie.net/logopedia/images/8/87/Wine_2008.png",
+            small_text=self.state.get_server_version(),
+            state=self.state.get_server_version(),
+            large_image=app.icon,
+            large_text=app.title,
+        )
 
     async def _event(self):
         while True:
@@ -106,37 +121,19 @@ class WineRPC:
 
         if apps:
             if self.state.mode is not StateMode.RUNNING:
-                self.state.process = apps[0]
                 self.state.mode = StateMode.RUNNING
                 log("INFO", "New process is running: " + apps[0].title)
 
-                await self.rpc.update(
-                    details=f"Playing {apps[0].title}",
-                    start=time.time(),  # type: ignore
-                    small_image="https://static.wikia.nocookie.net/logopedia/images/8/87/Wine_2008.png",
-                    small_text=self.state.get_server_version(),  # type: ignore
-                    state=self.state.get_server_version(),  # type: ignore
-                    large_image=apps[0].icon,  # type: ignore
-                    large_text=apps[0].title,
-                )
+                await self._update(apps[0])
             else:
-                if not self.apps._get(self.state.process.exe[0], apps):  # type: ignore
-                    self.state.process = apps[0]
+                if not self.apps._get(self.state.process.exe[0], apps):
                     log("INFO", "Process updated to: " + apps[0].title)
 
                     await self.rpc.clear()
-                    await self.rpc.update(
-                        details=f"Playing {apps[0].title}",
-                        start=time.time(),  # type: ignore
-                        small_image="https://static.wikia.nocookie.net/logopedia/images/8/87/Wine_2008.png",
-                        small_text=self.state.get_server_version(),  # type: ignore
-                        state=self.state.get_server_version(),  # type: ignore
-                        large_image=apps[0].icon,  # type: ignore
-                        large_text=apps[0].title,
-                    )
+                    await self._update(apps[0])
         else:
             if self.state.mode is StateMode.RUNNING:
-                log("INFO", "Process stopped: " + self.state.process.title)  # type: ignore
+                log("INFO", "Process stopped: " + self.state.process.title)
                 self.state.process = None
                 self.state.mode = StateMode.SCANNING
 
@@ -184,7 +181,7 @@ class WineRPC:
                 "ERROR",
                 "Couldn't connect to Discord RPC Socket.",
             )
-            exit(1)
+            sys.exit(1)
         log("INFO", "Starting watcher task...")
         self.loop.create_task(self._watcher())
         await self._event()
@@ -194,6 +191,6 @@ class WineRPC:
 
 
 if __name__ == "__main__":
-    config = json.load(open("config.json", "r"))
-    winerpc = WineRPC(config)
-    winerpc.start()
+    with open("config.json", "r", encoding="UTF-8") as conf:
+        winerpc = WineRPC(json.load(conf))
+        winerpc.start()
