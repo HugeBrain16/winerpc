@@ -164,12 +164,8 @@ class WineRPC:
                     exe = self.get_process_basename(proc)
 
                     if exe in WINEPROCS and exe not in procs:
-                        if exe == "wineserver" and self.state.server != proc.exe():
+                        if exe == "wineserver" and not self.state.server:
                             self.state.server = proc.exe()
-                            log(
-                                "INFO",
-                                f"Wine Server: {self.state.get_server_version()}",
-                            )
                         procs.append(exe)
                 except psutil.AccessDenied:
                     continue
