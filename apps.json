@@ -7,11 +7,11 @@
   {
     "title": "S.T.A.L.K.E.R Anomaly",
     "exe": [
-      "AnomalyDX8",
-      "AnomalyDX9",
-      "AnomalyDX10",
-      "AnomalyDX11",
-      "AnomalyLauncher"
+      "AnomalyDX8.exe",
+      "AnomalyDX9.exe",
+      "AnomalyDX10.exe",
+      "AnomalyDX11.exe",
+      "AnomalyLauncher.exe"
     ],
     "icon": "https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/41700/60b32d190ebcaac8d2b2aaf16db2b07015616eb2.jpg"
   },
@@ -22,7 +22,42 @@
   },
   {
     "title": "Dwarf Fortress",
-    "exe": ["Dwarf Fortress."],
+    "exe": ["Dwarf Fortress.exe"],
     "icon": "https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/975370/f2590e71d4b5c48c200ecc4d8b6e0eddb60eff20.jpg"
+  },
+  {
+    "title": "Touhou 6 - Embodiment of Scarlet Devil",
+    "exe": ["th06e.exe", "東方紅魔郷.exe"],
+    "icon": "https://upload.wikimedia.org/wikipedia/en/thumb/8/8b/Th06cover.jpg/220px-Th06cover.jpg"
+  },
+  {
+    "title": "Grand Theft Auto: San Andreas",
+    "exe": ["gta_sa.exe"],
+    "icon": "https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/12120/895e9391da2b8155989022d9dd95b12e09766375.jpg"
+  },
+  {
+    "title": "The Elder Scrolls V: Skyrim",
+    "exe": ["SkyrimLauncher.exe", "TESV.exe"],
+    "icon": "https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/72850/b9aca8a189abd8d6aaf09047dbb0f57582683e1c.jpg"
+  },
+  {
+    "title": "Fallout: New Vegas",
+    "exe": ["nvse_loader.exe", "FalloutNV.exe"],
+    "icon": "https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/22380/1711fd8c46d739feec76bd4a64eaeeca5b87e3a7.jpg"
+  },
+  {
+    "title": "Grand Theft Auto IV: The Complete Edition",
+    "exe": ["GTAIV.exe"],
+    "icon": "https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/12210/a3cf6a64c73f991898a9e34681d0db8226eaa191.jpg"
+  },
+  {
+    "title": "Stardew Valley",
+    "exe": ["Stardew Valley.exe", "StardewModdingAPI.exe"],
+    "icon": "https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/413150/35d1377200084a4034238c05b0c8930451e2fb40.jpg"
+  },
+  {
+    "title": "Roblox",
+    "exe": ["RobloxPlayerBeta.exe"],
+    "icon": "https://upload.wikimedia.org/wikipedia/commons/7/7e/Roblox_Logo_2022.jpg"
   }
 ]
