@@ -1,2 +1,3 @@
 psutil
 pypresence
+binary2strings

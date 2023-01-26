@@ -1,15 +1,17 @@
 #!/usr/bin/python3
 import asyncio
 import json
+import re
 import time
 from dataclasses import dataclass
 from enum import Enum
 from typing import List, Optional, Union
 
+import binary2strings as b2s
 import psutil
 from pypresence import AioPresence
 
-__version__ = "1.0.0-rc0"
+__version__ = "1.0.0-rc1"
 
 # needs these wine processes,
 # to check if wineserver is running
@@ -41,6 +43,19 @@ class StateMode(Enum):
 class State:
     process: Optional[App] = None
     mode: StateMode = StateMode.INACTIVE
+    server: Optional[str] = None
+
+    def get_server_version(self) -> Optional[str]:
+        """get running wine server version"""
+        if not self.server:
+            return
+
+        with open(self.server, "rb") as file:
+            for string, _, _, _ in b2s.extract_all_strings(file.read(), min_chars=4):
+                version = re.match(r"Wine\s\d+\.\d+", string)
+
+                if version:
+                    return version.string
 
 
 class AppDB:
@@ -99,6 +114,8 @@ class WineRPC:
                     details=f"Playing {apps[0].title}",
                     start=time.time(),  # type: ignore
                     small_image="wine",
+                    small_text=self.state.get_server_version(),  # type: ignore
+                    state=self.state.get_server_version(),  # type: ignore
                     large_image=apps[0].icon,  # type: ignore
                 )
             else:
@@ -111,6 +128,8 @@ class WineRPC:
                         details=f"Playing {apps[0].title}",
                         start=time.time(),  # type: ignore
                         small_image="wine",
+                        small_text=self.state.get_server_version(),  # type: ignore
+                        state=self.state.get_server_version(),  # type: ignore
                         large_image=apps[0].icon,  # type: ignore
                     )
         else:
@@ -128,6 +147,8 @@ class WineRPC:
                 name = proc.name()
 
                 if name in WINEPROCS and name not in procs:
+                    if name == "wineserver" and not self.state.server:
+                        self.state.server = proc.exe()
                     procs.append(name)
 
             if len(procs) < len(WINEPROCS):
@@ -137,6 +158,7 @@ class WineRPC:
                 if self.state.mode is not StateMode.INACTIVE:
                     self.state.process = None
                     self.state.mode = StateMode.INACTIVE
+                    self.state.server = None
                     log("INFO", "Watcher is in INACTIVE state.")
             else:
                 if self.state.mode not in [StateMode.SCANNING, StateMode.RUNNING]:
