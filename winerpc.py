@@ -52,7 +52,7 @@ class State:
 
         with open(self.server, "rb") as file:
             for string, _, _, _ in b2s.extract_all_strings(file.read(), min_chars=4):
-                version = re.match(r"Wine\s\d+\.\d+", string)
+                version = re.match(r"^Wine\s\d+\.\d+", string)
 
                 if version:
                     return version.string
@@ -149,6 +149,7 @@ class WineRPC:
                 if name in WINEPROCS and name not in procs:
                     if name == "wineserver" and not self.state.server:
                         self.state.server = proc.exe()
+                        log("INFO", f"Wine Server: {self.state.get_server_version()}")
                     procs.append(name)
 
             if len(procs) < len(WINEPROCS):
