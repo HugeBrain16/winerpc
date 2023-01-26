@@ -11,7 +11,7 @@ import binary2strings as b2s
 import psutil
 from pypresence import AioPresence
 
-__version__ = "1.0.0-rc1"
+__version__ = "1.0.0-rc2"
 
 # needs these wine processes,
 # to check if wineserver is running
@@ -117,6 +117,7 @@ class WineRPC:
                     small_text=self.state.get_server_version(),  # type: ignore
                     state=self.state.get_server_version(),  # type: ignore
                     large_image=apps[0].icon,  # type: ignore
+                    large_text=apps[0].title,
                 )
             else:
                 if not self.apps._get(self.state.process.exe[0], apps):  # type: ignore
@@ -131,6 +132,7 @@ class WineRPC:
                         small_text=self.state.get_server_version(),  # type: ignore
                         state=self.state.get_server_version(),  # type: ignore
                         large_image=apps[0].icon,  # type: ignore
+                        large_text=apps[0].title,
                     )
         else:
             if self.state.mode is StateMode.RUNNING:
