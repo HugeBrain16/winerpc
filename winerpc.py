@@ -113,7 +113,7 @@ class WineRPC:
                 await self.rpc.update(
                     details=f"Playing {apps[0].title}",
                     start=time.time(),  # type: ignore
-                    small_image="wine",
+                    small_image="https://static.wikia.nocookie.net/logopedia/images/8/87/Wine_2008.png",
                     small_text=self.state.get_server_version(),  # type: ignore
                     state=self.state.get_server_version(),  # type: ignore
                     large_image=apps[0].icon,  # type: ignore
@@ -127,7 +127,7 @@ class WineRPC:
                     await self.rpc.update(
                         details=f"Playing {apps[0].title}",
                         start=time.time(),  # type: ignore
-                        small_image="wine",
+                        small_image="https://static.wikia.nocookie.net/logopedia/images/8/87/Wine_2008.png",
                         small_text=self.state.get_server_version(),  # type: ignore
                         state=self.state.get_server_version(),  # type: ignore
                         large_image=apps[0].icon,  # type: ignore
