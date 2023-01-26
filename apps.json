@@ -1,5 +1,9 @@
 [
-  { "title": "Osu!", "exe": ["osu!.exe"], "icon": "osu" },
+  {
+    "title": "Osu!",
+    "exe": ["osu!.exe"],
+    "icon": "https://static.wikia.nocookie.net/logopedia/images/d/d3/Osu%21Logo_%282015%29.png"
+  },
   {
     "title": "S.T.A.L.K.E.R Anomaly",
     "exe": [
@@ -8,9 +12,14 @@
       "AnomalyDX10",
       "AnomalyDX11",
       "AnomalyLauncher"
-    ]
+    ],
+    "icon": "https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/41700/60b32d190ebcaac8d2b2aaf16db2b07015616eb2.jpg"
   },
-  { "title": "HoloCure", "exe": ["holocure.exe"] },
+  {
+    "title": "HoloCure",
+    "exe": ["holocure.exe"],
+    "icon": "https://static.wikia.nocookie.net/holocure/images/e/e6/Site-logo.png"
+  },
   {
     "title": "Dwarf Fortress",
     "exe": ["Dwarf Fortress."],
