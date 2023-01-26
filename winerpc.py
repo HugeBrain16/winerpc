@@ -164,7 +164,7 @@ class WineRPC:
                     exe = self.get_process_basename(proc)
 
                     if exe in WINEPROCS and exe not in procs:
-                        if exe == "wineserver" and not self.state.server:
+                        if exe == "wineserver" and self.state.server != proc.exe():
                             self.state.server = proc.exe()
                             log(
                                 "INFO",
