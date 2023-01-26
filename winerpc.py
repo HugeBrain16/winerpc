@@ -143,7 +143,7 @@ class WineRPC:
 
                 await self._update(apps[0])
             else:
-                if self.state.process is not self.apps._get(apps[0].exe[0], apps):
+                if self.state.process is not apps[0]:
                     log("INFO", "Process updated to: " + apps[0].title)
 
                     await self.rpc.clear()
