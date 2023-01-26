@@ -105,6 +105,12 @@ class WineRPC:
             large_text=app.title,
         )
 
+    def process_iter(self, reverse: bool = True):
+        """Iterates process from new to old"""
+        return sorted(
+            psutil.process_iter(), key=lambda p: p.create_time(), reverse=reverse
+        )
+
     async def _event(self):
         while True:
             await asyncio.sleep(15)
@@ -120,7 +126,7 @@ class WineRPC:
     async def _scan(self):
         apps: List[App] = []
 
-        for proc in psutil.process_iter():
+        for proc in self.process_iter():
             try:
                 exe = self.get_process_basename(proc).lower()
                 app = self.apps.get(exe)
@@ -137,7 +143,7 @@ class WineRPC:
 
                 await self._update(apps[0])
             else:
-                if not self.apps._get(self.state.process.exe[0], apps):
+                if self.state.process is not self.apps._get(apps[0].exe[0], apps):
                     log("INFO", "Process updated to: " + apps[0].title)
 
                     await self.rpc.clear()
@@ -153,7 +159,7 @@ class WineRPC:
     async def _watcher(self):
         while True:
             procs = []
-            for proc in psutil.process_iter():
+            for proc in self.process_iter():
                 try:
                     exe = self.get_process_basename(proc)
 
