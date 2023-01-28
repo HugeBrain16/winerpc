@@ -4,6 +4,7 @@ import importlib
 import importlib.util
 import inspect
 import json
+import logging
 import os
 import re
 import sys
@@ -25,10 +26,7 @@ WINEPROCS = [
     "wineserver",
     "explorer.exe",
 ]
-
-
-def log(cat: str, msg: str):
-    print(f"[{cat}]: {msg}")
+logging.basicConfig(format="[%(levelname)s]: %(message)s", level=logging.INFO)
 
 
 @dataclass
@@ -75,7 +73,7 @@ class AppDB:
             self.apps.append(
                 App([exe.lower() for exe in app["exe"]], app["title"], app.get("icon"))
             )
-        log("INFO", f"Loaded {len(self.apps)} apps from database.")
+        logging.info(f"Loaded {len(self.apps)} apps from database.")
 
     @staticmethod
     def _get(exe: str, apps: List[App]) -> Optional[App]:
@@ -160,20 +158,20 @@ class WineRPC:
         if apps:
             if self.state.mode is not StateMode.RUNNING:
                 self.state.mode = StateMode.RUNNING
-                log("INFO", "New process is running: " + apps[0].title)
+                logging.info("New process is running: " + apps[0].title)
 
                 async with self.lock:
                     await self._update(apps[0])
             else:
                 if self.state.process is not apps[0]:
-                    log("INFO", "Process updated to: " + apps[0].title)
+                    logging.info("Process updated to: " + apps[0].title)
 
                     async with self.lock:
                         await self.rpc.clear()
                         await self._update(apps[0])
         else:
             if self.state.mode is StateMode.RUNNING:
-                log("INFO", "Process stopped: " + self.state.process.title)
+                logging.info("Process stopped: " + self.state.process.title)
                 self.state.process = None
                 self.state.mode = StateMode.SCANNING
 
@@ -203,13 +201,12 @@ class WineRPC:
                     self.state.process = None
                     self.state.mode = StateMode.INACTIVE
                     self.state.server = None
-                    log("INFO", "Watcher is in INACTIVE state.")
+                    logging.debug("Watcher is in INACTIVE state.")
             else:
                 if self.state.mode not in [StateMode.SCANNING, StateMode.RUNNING]:
                     self.state.mode = StateMode.SCANNING
-                    log(
-                        "INFO",
-                        "Watcher is in SCANNING state, scanning for running apps...",
+                    logging.debug(
+                        "Watcher is in SCANNING state, scanning for running apps..."
                     )
 
                 await self._scan()
@@ -217,29 +214,26 @@ class WineRPC:
             await asyncio.sleep(1)
 
     async def _start(self):
-        log("INFO", "Connecting to Discord RPC Socket...")
+        logging.info("Connecting to Discord RPC Socket...")
         try:
             await self.rpc.connect()
         except ConnectionRefusedError:
-            log(
-                "ERROR",
-                "Couldn't connect to Discord RPC Socket.",
-            )
+            logging.error("Couldn't connect to Discord RPC Socket.")
             sys.exit(1)
-        log("INFO", "Starting watcher task...")
+        logging.info("Starting watcher task...")
         self.loop.create_task(self._watcher())
         for plugin in self.config["plugins"]:
             plug = self.load_plugin(plugin)
 
             if plug:
-                log("INFO", "Loading plugin: " + plugin)
+                logging.info("Loading plugin: " + plugin)
                 task = self.loop.create_task(plug._plugin_entry(self))
                 on_exit = getattr(plug, "_plugin_exit")
 
                 if on_exit and callable(on_exit):
                     task.add_done_callback(on_exit)
             else:
-                log("WARNING", "Plugin Not Found: " + plugin)
+                logging.warning("Plugin Not Found: " + plugin)
 
         await self._event()
 
