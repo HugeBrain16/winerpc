@@ -236,6 +236,8 @@ class WineRPC:
 
                 if on_exit and callable(on_exit):
                     task.add_done_callback(on_exit)
+            else:
+                log("WARNING", "Plugin Not Found: " + plugin)
 
         await self._event()
 
