@@ -231,7 +231,12 @@ class WineRPC:
 
             if plug:
                 log("INFO", "Loading plugin: " + plugin)
-                self.loop.create_task(plug._plugin_entry(self))
+                task = self.loop.create_task(plug._plugin_entry(self))
+                on_exit = getattr(plug, "_plugin_exit")
+
+                if on_exit and callable(on_exit):
+                    task.add_done_callback(on_exit)
+
         await self._event()
 
     def start(self):
