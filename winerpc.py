@@ -33,6 +33,7 @@ class App:
     exe: str | List[str]
     title: str
     icon: Optional[str] = None
+    start_time: Optional[float] = None
 
 
 class StateMode(Enum):
@@ -97,7 +98,7 @@ class WineRPC:
 
         await self.rpc.update(
             details=f"Playing {app.title}",
-            start=time.time(),
+            start=app.start_time if app.start_time else time.time(),
             small_image="https://static.wikia.nocookie.net/logopedia/images/8/87/Wine_2008.png",
             small_text=self.state.get_server_version(),
             state=state,
@@ -132,6 +133,7 @@ class WineRPC:
                 app = self.apps.get(exe)
 
                 if app and not self.apps._get(exe, apps):
+                    app.start_time = proc.create_time()
                     apps.append(app)
             except psutil.AccessDenied:
                 continue
