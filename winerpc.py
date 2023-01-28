@@ -16,7 +16,7 @@ import binary2strings as b2s
 import psutil
 from pypresence import AioPresence
 
-__version__ = "1.0.0-rc3"
+__version__ = "1.0.0-rc4"
 
 # needs these wine processes,
 # to check if wineserver is running
