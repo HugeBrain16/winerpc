@@ -17,16 +17,8 @@ import binary2strings as b2s
 import psutil
 from pypresence import AioPresence
 
-__version__ = "1.0.0-dev4"
-
-# needs these wine processes,
-# to check if wineserver is running
-WINEPROCS = [
-    "start.exe",
-    "wineserver",
-    "explorer.exe",
-]
-logging.basicConfig(format="[%(levelname)s]: %(message)s", level=logging.INFO)
+__version__ = "1.0.0-dev5"
+logging.basicConfig(format="[%(levelname)s]: %(message)s", level=logging.DEBUG)
 
 
 @dataclass
@@ -141,58 +133,72 @@ class WineRPC:
         return proc
 
     async def _scan(self):
-        apps: List[App] = []
+        while self.state.mode in [StateMode.SCANNING, StateMode.RUNNING]:
+            apps: List[App] = []
 
-        for proc in self.process_iter():
-            try:
-                exe = self.get_process_basename(proc).lower()
-                app = self.apps.get(exe)
+            for proc in self.process_iter():
+                try:
+                    exe = self.get_process_basename(proc).lower()
+                    app = self.apps.get(exe)
 
-                if app and not self.apps._get(exe, apps):
-                    app.pid = proc.pid
-                    app.start_time = proc.create_time()
-                    apps.append(app)
-            except psutil.AccessDenied:
-                continue
+                    if app and not self.apps._get(exe, apps):
+                        app.pid = proc.pid
+                        app.start_time = proc.create_time()
+                        apps.append(app)
+                except psutil.AccessDenied:
+                    continue
+                except psutil.NoSuchProcess:
+                    continue
 
-        if apps:
-            if self.state.mode is not StateMode.RUNNING:
-                self.state.mode = StateMode.RUNNING
-                logging.info("New process is running: " + apps[0].title)
+            if apps:
+                if self.state.mode is not StateMode.RUNNING:
+                    self.state.mode = StateMode.RUNNING
+                    logging.info("New process is running: " + apps[0].title)
 
-                async with self.lock:
-                    await self._update(apps[0])
-            else:
-                if self.state.process is not apps[0]:
+                    async with self.lock:
+                        await self._update(apps[0])
+                elif self.state.process is not apps[0]:
                     logging.info("Process updated to: " + apps[0].title)
 
                     async with self.lock:
                         await self.rpc.clear()
                         await self._update(apps[0])
-        else:
-            if self.state.mode is StateMode.RUNNING:
+            elif self.state.mode is StateMode.RUNNING:
                 logging.info("Process stopped: " + self.state.process.title)
                 self.state.process = None
-                self.state.mode = StateMode.SCANNING
+                self.state.server = None
+                self.state.mode = StateMode.INACTIVE
 
                 async with self.lock:
                     await self.rpc.clear()
 
+            await asyncio.sleep(1)
+
     async def _watcher(self):
         while True:
-            procs = []
             for proc in self.process_iter():
                 try:
                     exe = self.get_process_basename(proc)
 
-                    if exe in WINEPROCS and exe not in procs:
-                        if exe == "wineserver" and not self.state.server:
-                            self.state.server = proc.exe()
-                        procs.append(exe)
+                    if exe == "wineserver" and not self.state.server:
+                        self.state.server = proc.exe()
+                        logging.debug(
+                            f"Using wineserver: {self.state.get_server_version()}"
+                        )
                 except psutil.AccessDenied:
                     continue
+                except psutil.NoSuchProcess:
+                    continue
 
-            if len(procs) < len(WINEPROCS):
+            if self.state.server:
+                if self.state.mode is not StateMode.SCANNING:
+                    self.state.mode = StateMode.SCANNING
+                    logging.debug(
+                        "Watcher is in SCANNING state, scanning for running apps..."
+                    )
+
+                await self._scan()
+            else:
                 if self.state.mode is StateMode.RUNNING:
                     async with self.lock:
                         await self.rpc.clear()
@@ -202,14 +208,6 @@ class WineRPC:
                     self.state.mode = StateMode.INACTIVE
                     self.state.server = None
                     logging.debug("Watcher is in INACTIVE state.")
-            else:
-                if self.state.mode not in [StateMode.SCANNING, StateMode.RUNNING]:
-                    self.state.mode = StateMode.SCANNING
-                    logging.debug(
-                        "Watcher is in SCANNING state, scanning for running apps..."
-                    )
-
-                await self._scan()
 
             await asyncio.sleep(1)
 
