@@ -145,9 +145,7 @@ class WineRPC:
                         app.pid = proc.pid
                         app.start_time = proc.create_time()
                         apps.append(app)
-                except psutil.AccessDenied:
-                    continue
-                except psutil.NoSuchProcess:
+                except (psutil.AccessDenied, psutil.NoSuchProcess):
                     continue
 
             if apps:
@@ -185,9 +183,7 @@ class WineRPC:
                         logging.debug(
                             f"Using wineserver: {self.state.get_server_version()}"
                         )
-                except psutil.AccessDenied:
-                    continue
-                except psutil.NoSuchProcess:
+                except (psutil.AccessDenied, psutil.NoSuchProcess):
                     continue
 
             if self.state.server:
