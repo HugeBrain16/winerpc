@@ -17,7 +17,7 @@ import binary2strings as b2s
 import psutil
 from pypresence import AioPresence
 
-__version__ = "1.0.0-dev5"
+__version__ = "1.0.0-dev6"
 logging.basicConfig(format="[%(levelname)s]: %(message)s", level=logging.DEBUG)
 
 
@@ -119,10 +119,6 @@ class WineRPC:
         return sorted(
             psutil.process_iter(), key=lambda p: p.create_time(), reverse=reverse
         )
-
-    async def _event(self):
-        while True:
-            await asyncio.sleep(15)
 
     def get_process_basename(self, process: psutil.Process) -> str:
         proc = os.path.basename(process.exe().replace("\\", os.sep))
@@ -229,7 +225,7 @@ class WineRPC:
             else:
                 logging.warning("Plugin Not Found: " + plugin)
 
-        await self._event()
+        await self._watcher()
 
     def start(self):
         self.loop.run_until_complete(self._start())
