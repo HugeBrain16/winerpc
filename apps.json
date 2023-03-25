@@ -69,5 +69,15 @@
     "title": "DELTARUNE",
     "exe": ["DELTARUNE.exe"],
     "icon": "https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/1671210/f76969de63cf2f4eb11bc4a1c17e67beb590a9c5.jpg"
+  },
+  {
+    "title": "Touhou 7 - Perfect Cherry Blossom",
+    "exe": ["th07.exe", "Touhou07.exe"],
+    "icon": "https://en.touhouwiki.net/images/thumb/5/52/Th07cover.jpg/256px-Th07cover.jpg"
+  },
+  {
+    "title": "Touhou 8 - Imperishable Night",
+    "exe": ["th08.exe", "Touhou08.exe"],
+    "icon": "https://en.touhouwiki.net/images/thumb/5/59/Th08cover.jpg/256px-Th08cover.jpg"
   }
 ]
