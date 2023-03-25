@@ -59,5 +59,10 @@
     "title": "Roblox",
     "exe": ["RobloxPlayerBeta.exe"],
     "icon": "https://upload.wikimedia.org/wikipedia/commons/7/7e/Roblox_Logo_2022.jpg"
+  },
+  {
+    "title": "Touhou Hisoutensoku",
+    "exe": ["th123.exe", "th123e.exe"],
+    "icon": "https://en.touhouwiki.net/images/thumb/7/72/Th123.jpg/256px-Th123.jpg"
   }
 ]
