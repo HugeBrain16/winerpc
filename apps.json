@@ -64,5 +64,10 @@
     "title": "Touhou Hisoutensoku",
     "exe": ["th123.exe", "th123e.exe"],
     "icon": "https://en.touhouwiki.net/images/thumb/7/72/Th123.jpg/256px-Th123.jpg"
+  },
+  {
+    "title": "DELTARUNE",
+    "exe": ["DELTARUNE.exe"],
+    "icon": "https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/1671210/f76969de63cf2f4eb11bc4a1c17e67beb590a9c5.jpg"
   }
 ]
