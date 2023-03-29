@@ -3,21 +3,22 @@ import asyncio
 import importlib
 import importlib.util
 import inspect
+import io
 import json
 import logging
 import os
 import re
+import subprocess
 import sys
 import time
 from dataclasses import dataclass
 from enum import Enum
 from typing import List, Optional
 
-import binary2strings as b2s
 import psutil
 from pypresence import AioPresence
 
-__version__ = "1.0.0-dev6"
+__version__ = "1.0.0-dev7"
 logging.basicConfig(format="[%(levelname)s]: %(message)s", level=logging.DEBUG)
 
 
@@ -47,12 +48,13 @@ class State:
         if not self.server:
             return
 
-        with open(self.server, "rb") as file:
-            for string, _, _, _ in b2s.extract_all_strings(file.read(), min_chars=4):
-                version = re.match(r"^Wine\s\d+\.\d+", string)
+        for string in io.StringIO(
+            subprocess.check_output(["strings", self.server]).decode()
+        ).readlines():
+            version = re.match(r"^Wine\s\d+\.\d+", string)
 
-                if version:
-                    return version.string
+            if version:
+                return version.string.strip()
 
 
 class AppDB:
