@@ -79,5 +79,10 @@
     "title": "Touhou 8 - Imperishable Night",
     "exe": ["th08.exe", "Touhou08.exe"],
     "icon": "https://en.touhouwiki.net/images/thumb/5/59/Th08cover.jpg/256px-Th08cover.jpg"
+  },
+  {
+    "title": "Ashes 2063: Enriched",
+    "exe": ["AshesAfterglow.exe", "AshesAfterglow"],
+    "icon": "https://doomwiki.org/w/images/thumb/2/28/Ashes_2063_Title.png/320px-Ashes_2063_Title.png"
   }
 ]
