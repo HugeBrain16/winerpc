@@ -18,7 +18,7 @@ from typing import List, Optional
 import psutil
 from pypresence import AioPresence
 
-__version__ = "1.0.0-dev7"
+__version__ = "1.0.0-dev8"
 logging.basicConfig(format="[%(levelname)s]: %(message)s", level=logging.DEBUG)
 
 
@@ -220,7 +220,7 @@ class WineRPC:
             if plug:
                 logging.info("Loading plugin: " + plugin)
                 task = self.loop.create_task(plug._plugin_entry(self))
-                on_exit = getattr(plug, "_plugin_exit")
+                on_exit = getattr(plug, "_plugin_exit", None)
 
                 if on_exit and callable(on_exit):
                     task.add_done_callback(on_exit)
