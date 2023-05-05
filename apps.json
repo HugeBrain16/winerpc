@@ -84,5 +84,10 @@
     "title": "Ashes 2063: Enriched",
     "exe": ["AshesAfterglow.exe", "AshesAfterglow"],
     "icon": "https://doomwiki.org/w/images/thumb/2/28/Ashes_2063_Title.png/320px-Ashes_2063_Title.png"
+  },
+  {
+    "title": "My Summer Car",
+    "exe": ["mysummercar.exe"],
+    "icon": "https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/516750/773ed1ac3843892dad568ceb1ec26f49f05f9e42.jpg"
   }
 ]
