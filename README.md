@@ -1,6 +1,6 @@
 # WineRPC
 
-A Discord rich presence support for [Wine](https://winehq.org)  
+A custom Discord rich presence for [Wine](https://winehq.org)  
   
 ![Screenshot](ss.png)
 
