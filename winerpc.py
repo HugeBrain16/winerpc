@@ -16,9 +16,9 @@ from enum import Enum
 from typing import List, Optional
 
 import psutil
-from pypresence import AioPresence
+from pypresence import AioPresence, DiscordNotFound, PipeClosed
 
-__version__ = "1.0.0-dev8"
+__version__ = "1.0.0-dev9"
 logging.basicConfig(format="[%(levelname)s]: %(message)s", level=logging.DEBUG)
 
 
@@ -166,7 +166,10 @@ class WineRPC:
                 self.state.mode = StateMode.INACTIVE
 
                 async with self.lock:
-                    await self.rpc.clear()
+                    try:
+                        await self.rpc.clear()
+                    except PipeClosed:
+                        logging.warning("Connection to Discord RPC socket closed")
 
             await asyncio.sleep(1)
 
@@ -209,7 +212,7 @@ class WineRPC:
         logging.info("Connecting to Discord RPC Socket...")
         try:
             await self.rpc.connect()
-        except ConnectionRefusedError:
+        except (ConnectionRefusedError, DiscordNotFound):
             logging.error("Couldn't connect to Discord RPC Socket.")
             sys.exit(1)
         logging.info("Starting watcher task...")
