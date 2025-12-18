@@ -89,5 +89,10 @@
     "title": "My Summer Car",
     "exe": ["mysummercar.exe"],
     "icon": "https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/516750/773ed1ac3843892dad568ceb1ec26f49f05f9e42.jpg"
+  },
+  {
+    "title": "RimWorld",
+    "exe": ["RimWorldWin64.exe"],
+    "icon": "https://cdn2.steamgriddb.com/icon_thumb/d37eb50d868361ea729bb4147eb3c1d8.png"
   }
 ]
